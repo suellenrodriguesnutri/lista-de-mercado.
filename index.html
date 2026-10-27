@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f6b3a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mercado">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Lista de Mercado</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: uma coluna estreita feita para o polegar — cabeçalho fixo com progresso, seções do mercado, barra de adicionar no rodapé */
+:root{
+  --bg:#f3f6ef; --surface:#ffffff; --fg:#1d2a1f; --muted:#66745f; --line:#dde5d6;
+  --leaf:#2f6b3a; --leaf-soft:#e2eedc; --citrus:#f2c230; --done:#9aa894;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Figtree",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121812; --surface:#1b231b; --fg:#e6eee1; --muted:#9aab93; --line:#2b372a;
+  --leaf:#7cc488; --leaf-soft:#223522; --citrus:#e9b923; --done:#5d6b58; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121812; --surface:#1b231b; --fg:#e6eee1; --muted:#9aab93; --line:#2b372a;
+  --leaf:#7cc488; --leaf-soft:#223522; --citrus:#e9b923; --done:#5d6b58; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.4;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 140px}
+
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:18px 14px;display:grid;gap:12px}
+.top{display:flex;align-items:end;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:800;font-size:2rem;line-height:1;margin:0;letter-spacing:-.02em;text-wrap:balance}
+.count{font-family:var(--display);font-weight:600;font-size:1.05rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.count b{color:var(--leaf);font-size:1.6rem}
+.bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--leaf),var(--citrus));border-radius:99px;transition:width .35s ease}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font:600 .85rem var(--body);border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:8px 12px;border-radius:99px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--leaf);border-color:var(--leaf);color:var(--bg)}
+.chip.warn{color:var(--muted)}
+.chip:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--citrus);outline-offset:2px}
+
+.done-banner{background:var(--leaf-soft);border-radius:16px;padding:14px 16px;font-weight:600;color:var(--leaf);display:flex;gap:10px;align-items:center}
+
+section{margin-top:18px}
+section h2{font:600 .78rem var(--body);text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between}
+section h2 span{font-variant-numeric:tabular-nums}
+ul{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+li{display:flex;align-items:center;border-top:1px solid var(--line)}
+li:first-child{border-top:0}
+.item{flex:1;min-width:0;display:flex;align-items:center;gap:14px;padding:14px 8px 14px 14px;background:none;border:0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.box{flex:none;width:26px;height:26px;border-radius:8px;border:2px solid var(--leaf);display:grid;place-items:center;transition:background .15s}
+.box svg{width:16px;height:16px;opacity:0;transform:scale(.6);transition:.15s}
+.name{min-width:0;overflow-wrap:anywhere;font-weight:500}
+.qty{margin-left:auto;padding-left:8px;color:var(--muted);font-size:.9rem;white-space:nowrap;font-variant-numeric:tabular-nums}
+li.checked .box{background:var(--leaf)}
+li.checked .box svg{opacity:1;transform:scale(1)}
+li.checked .name{text-decoration:line-through;color:var(--done)}
+li.checked .qty{color:var(--done)}
+.del{flex:none;width:44px;align-self:stretch;border:0;background:none;color:var(--muted);cursor:pointer;font-size:1.3rem}
+.del:hover{color:var(--fg)}
+
+.empty{text-align:center;color:var(--muted);padding:40px 12px}
+
+form.add{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);
+  padding-top:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.addin{max-width:560px;margin:0 auto;display:grid;grid-template-columns:1fr 78px;gap:8px}
+.addin input,.addin select{font:500 16px var(--body);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
+.addin .row2{grid-column:1/-1;display:grid;grid-template-columns:1fr auto;gap:8px}
+.addin button{font:700 1rem var(--display);background:var(--leaf);color:var(--bg);border:0;border-radius:12px;padding:0 20px;cursor:pointer}
+
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.9rem;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="top">
+      <h1>Lista de Mercado</h1>
+      <div class="count"><b id="got">0</b> / <span id="total">0</span></div>
+    </div>
+    <div class="bar" aria-hidden="true"><span id="fill"></span></div>
+    <div class="tools">
+      <button class="chip" id="hideBtn" aria-pressed="false">Esconder pegos</button>
+      <button class="chip" id="newBtn">Nova compra</button>
+      <button class="chip warn" id="clearBtn">Apagar lista</button>
+    </div>
+    <div class="confirm" id="confirm" hidden>
+      <span id="confirmText"></span>
+      <button class="chip" id="yesBtn">Sim</button>
+      <button class="chip" id="noBtn">Cancelar</button>
+    </div>
+  </header>
+
+  <div id="banner" class="done-banner" hidden>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>
+    Tudo no carrinho! Bora pro caixa.
+  </div>
+  <main id="list"></main>
+</div>
+
+<form class="add" id="addForm" autocomplete="off">
+  <div class="addin">
+    <input id="newName" placeholder="Adicionar item… ex: aveia" aria-label="Nome do item">
+    <input id="newQty" placeholder="Qtd" aria-label="Quantidade">
+    <div class="row2">
+      <select id="newCat" aria-label="Seção do mercado"></select>
+      <button type="submit">Adicionar</button>
+    </div>
+  </div>
+</form>
+
+<script>
+const CATS=["Hortifruti","Proteínas","Ovos e laticínios","Grãos e cereais","Padaria","Gorduras boas","Mercearia","Congelados","Bebidas","Material de limpeza","Higiene pessoal","Outros"];
+const SAMPLE=[
+ ["Banana prata","1 penca","Hortifruti"],["Brócolis","2 maços","Hortifruti"],["Tomate","6 un","Hortifruti"],["Folhas verdes (alface, rúcula)","2 maços","Hortifruti"],["Batata-doce","1 kg","Hortifruti"],["Limão","8 un","Hortifruti"],
+ ["Peito de frango","1 kg","Proteínas"],["Patinho moído","500 g","Proteínas"],["Tilápia (filé)","500 g","Proteínas"],
+ ["Ovos","30 un","Ovos e laticínios"],["Iogurte natural","4 potes","Ovos e laticínios"],["Queijo cottage","1 pote","Ovos e laticínios"],
+ ["Arroz integral","1 kg","Grãos e cereais"],["Feijão carioca","1 kg","Grãos e cereais"],["Aveia em flocos","500 g","Grãos e cereais"],
+ ["Pão integral","1 pacote","Padaria"],["Azeite extra virgem","500 ml","Gorduras boas"],["Castanha-do-pará","200 g","Gorduras boas"],
+ ["Detergente","2 un","Material de limpeza"],["Creme dental","2 un","Higiene pessoal"]
+];
+const KEY="lista-mercado-v1";
+let state;
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&Array.isArray(s.items)){s.items.forEach(i=>{if(i.cat==="Limpeza e higiene")i.cat="Material de limpeza"});return s}}catch(e){}
+  return {hide:false,items:SAMPLE.map((r,i)=>({id:"s"+i,name:r[0],qty:r[1],cat:r[2],done:false}))}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+state=load();
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const check='<svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';
+
+$("newCat").innerHTML=CATS.map(c=>`<option>${c}</option>`).join("");
+
+function render(){
+  const total=state.items.length, got=state.items.filter(i=>i.done).length;
+  $("got").textContent=got;$("total").textContent=total;
+  $("fill").style.width=total?(got/total*100)+"%":"0";
+  $("hideBtn").setAttribute("aria-pressed",state.hide);
+  $("banner").hidden=!(total&&got===total);
+  if(!total){$("list").innerHTML='<p class="empty">Lista vazia.<br>Digite o primeiro item lá embaixo e escolha a seção do mercado.</p>';return}
+  let html="";
+  for(const c of CATS){
+    const all=state.items.filter(i=>i.cat===c); if(!all.length)continue;
+    const left=all.filter(i=>!i.done).length;
+    let shown=[...all.filter(i=>!i.done),...all.filter(i=>i.done)];
+    if(state.hide)shown=shown.filter(i=>!i.done);
+    if(!shown.length)continue;
+    html+=`<section><h2>${c}<span>${left?left+" faltando":"ok ✓"}</span></h2><ul>`+
+      shown.map(i=>`<li class="${i.done?"checked":""}"><button class="item" data-id="${i.id}" aria-pressed="${i.done}"><span class="box">${check}</span><span class="name">${esc(i.name)}</span>${i.qty?`<span class="qty">${esc(i.qty)}</span>`:""}</button><button class="del" data-del="${i.id}" aria-label="Remover ${esc(i.name)}">×</button></li>`).join("")+
+      `</ul></section>`;
+  }
+  $("list").innerHTML=html||'<p class="empty">Você já pegou tudo que está visível.</p>';
+}
+
+$("list").addEventListener("click",e=>{
+  const b=e.target.closest("[data-id]"),d=e.target.closest("[data-del]");
+  if(b){const it=state.items.find(i=>i.id===b.dataset.id);it.done=!it.done;if(navigator.vibrate)try{navigator.vibrate(12)}catch(_){}}
+  else if(d){state.items=state.items.filter(i=>i.id!==d.dataset.del)}
+  else return;
+  save();render();
+});
+$("addForm").addEventListener("submit",e=>{
+  e.preventDefault();const n=$("newName").value.trim();if(!n)return;
+  state.items.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:n,qty:$("newQty").value.trim(),cat:$("newCat").value,done:false});
+  $("newName").value="";$("newQty").value="";save();render();$("newName").focus();
+});
+$("hideBtn").onclick=()=>{state.hide=!state.hide;save();render()};
+
+let pending=null;
+function ask(text,fn){pending=fn;$("confirmText").textContent=text;$("confirm").hidden=false}
+$("newBtn").onclick=()=>ask("Desmarcar todos os itens e começar uma nova compra?",()=>state.items.forEach(i=>i.done=false));
+$("clearBtn").onclick=()=>ask("Apagar a lista inteira?",()=>{state.items=[]});
+$("yesBtn").onclick=()=>{pending&&pending();pending=null;$("confirm").hidden=true;save();render()};
+$("noBtn").onclick=()=>{pending=null;$("confirm").hidden=true};
+
+// mantém a tela acesa durante a compra, quando o aparelho permite
+async function wake(){try{if("wakeLock"in navigator&&document.visibilityState==="visible")await navigator.wakeLock.request("screen")}catch(e){}}
+wake();document.addEventListener("visibilitychange",wake);
+render();
+</script>
+
+<script>if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));</script>
+</body>
+</html>
